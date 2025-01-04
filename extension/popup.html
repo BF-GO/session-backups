@@ -33,7 +33,7 @@
 			</div>
 
 			<!-- Контейнер для динамического содержимого вкладок -->
-			<div id="contentContainer">
+			<div id="contentContainer" class="custom-scrollbar">
 				<!-- Шаблоны, скрытые от отображения -->
 				<template id="sessionsTabTemplate">
 					<!-- Содержимое вкладки "Сессии" -->
@@ -104,7 +104,11 @@
 									<label for="sessionSelectForGroup"
 										>Выберите сессии для добавления в группу:</label
 									>
-									<select id="sessionSelectForGroup" multiple>
+									<select
+										id="sessionSelectForGroup"
+										multiple
+										class="custom-scrollbar"
+									>
 										<!-- Опции будут заполнены динамически -->
 									</select>
 								</div>
@@ -141,19 +145,19 @@
 							</div>
 
 							<div class="sessions-container">
-								<div class="session-list" id="manualSessions">
+								<div class="session-list custom-scrollbar" id="manualSessions">
 									<h3>Ручные Сессии</h3>
 									<p>Нет доступных сессий</p>
 								</div>
-								<div class="session-list" id="autoSessions">
+								<div class="session-list custom-scrollbar" id="autoSessions">
 									<h3>Автоматические Сессии</h3>
 									<p>Нет доступных сессий</p>
 								</div>
-								<div class="session-list" id="changeSessions">
+								<div class="session-list custom-scrollbar" id="changeSessions">
 									<h3>Сессии при Изменении Вкладок</h3>
 									<p>Нет доступных сессий</p>
 								</div>
-								<div class="session-list" id="customGroups">
+								<div class="session-list custom-scrollbar" id="customGroups">
 									<h3>Пользовательские Группы</h3>
 									<p>Нет доступных групп</p>
 								</div>
@@ -232,7 +236,7 @@
 										<label for="sessionSelect"
 											>Выберите сессию для восстановления:</label
 										>
-										<select id="sessionSelect">
+										<select id="sessionSelect" class="custom-scrollbar">
 											<!-- Опции будут заполнены динамически -->
 										</select>
 									</div>
@@ -270,7 +274,7 @@
 										Добавить Планировку
 									</button>
 								</div>
-								<div class="scheduled-list">
+								<div class="scheduled-list custom-scrollbar">
 									<h3>Запланированные открытия</h3>
 									<ul id="scheduledSessionsList">
 										<!-- Список запланированных сессий будет заполнен динамически -->
@@ -421,6 +425,8 @@
 					</div>
 				</template>
 			</div>
+
+			<!-- Шаблоны закрыты, скрипт вынесен в popup.js -->
 		</main>
 		<script src="popup.js"></script>
 	</body>

@@ -952,14 +952,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (detailsDiv.style.display === 'block') {
 					detailsDiv.style.display = 'none';
 					button.textContent = 'Просмотреть';
-					detailsDiv.classList.remove('group-details'); // Удаляем класс при скрытии
+					detailsDiv.classList.remove('group-details');
 					return;
 				}
 
-				detailsDiv.innerHTML = ''; // Очищаем предыдущие детали
+				detailsDiv.innerHTML = '';
 
 				if (group.type === 'session') {
-					// Отображаем сессии в группе
 					const sessionList = document.createElement('ul');
 					group.sessions.forEach((sessionId) => {
 						const [sessionType, sessionIndex] = sessionId.split('_');
@@ -1065,15 +1064,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	// --- Функция для восстановления отдельного окна ---
+	// --- Функция для восстановления отдельного окна с ограничением параллельных открытий ---
 	function restoreWindow(tabs) {
 		console.log(`Restoring window with ${tabs.length} tabs`);
-		if (tabs.length === 0) return; // Проверяем, есть ли вкладки для восстановления
+		if (tabs.length === 0) return;
 
 		const firstTab = tabs[0].url;
 		const otherTabs = tabs.slice(1).map((tab) => tab.url);
 
-		// Создаём новое окно с первой вкладкой
 		chrome.windows.create({ url: firstTab, state: 'normal' }, (newWindow) => {
 			if (!newWindow || !newWindow.id) {
 				console.error('Failed to create new window.');
@@ -1081,21 +1079,36 @@ document.addEventListener('DOMContentLoaded', () => {
 				return;
 			}
 
-			// Добавляем остальные вкладки
-			otherTabs.forEach((url, index) => {
-				chrome.tabs.create(
-					{
-						windowId: newWindow.id,
-						url,
-						index: index + 1, // Устанавливаем порядок вкладок
-					},
-					(tab) => {
-						if (chrome.runtime.lastError) {
-							console.error('Error creating tab:', chrome.runtime.lastError);
-						}
-					}
+			const maxConcurrent = 5;
+			let currentIndex = 0;
+
+			function openNextBatch() {
+				const batch = otherTabs.slice(
+					currentIndex,
+					currentIndex + maxConcurrent
 				);
-			});
+				batch.forEach((url, index) => {
+					chrome.tabs.create(
+						{
+							windowId: newWindow.id,
+							url,
+							active: false,
+							autoDiscardable: true,
+						},
+						(tab) => {
+							if (chrome.runtime.lastError) {
+								console.error('Error creating tab:', chrome.runtime.lastError);
+							}
+						}
+					);
+				});
+				currentIndex += maxConcurrent;
+				if (currentIndex < otherTabs.length) {
+					setTimeout(openNextBatch, 500);
+				}
+			}
+
+			openNextBatch();
 		});
 	}
 
@@ -1662,14 +1675,16 @@ document.addEventListener('DOMContentLoaded', () => {
 												.join('')}
 									</div>
 
-									<button id="saveSessionConfirmBtn" class="button">Сохранить</button>
-									<button id="cancelSessionBtn" class="button">Отмена</button>
+									<div style="display: flex; justify-content: flex-end;">
+											<button id="saveSessionConfirmBtn" class="button">Сохранить</button>
+											<button id="cancelSessionBtn" class="button">Отмена</button>
+									</div>
 							</div>
 					`;
 
-			// Затемнение фона
+			// Создаём overlay
 			const overlay = document.createElement('div');
-			overlay.className = 'dialog-overlay';
+			overlay.className = 'dialog-overlay active'; // Добавляем класс 'active' для отображения
 			overlay.appendChild(dialog);
 			document.body.appendChild(overlay);
 
@@ -1724,6 +1739,13 @@ document.addEventListener('DOMContentLoaded', () => {
 					// Удаляем диалог
 					document.body.removeChild(overlay);
 				});
+
+			// Добавить возможность закрытия диалога при клике вне его
+			overlay.addEventListener('click', (e) => {
+				if (e.target === overlay) {
+					document.body.removeChild(overlay);
+				}
+			});
 		});
 	}
 

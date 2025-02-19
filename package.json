@@ -1,0 +1,21 @@
+{
+	"name": "sessionbackups",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"build": "webpack"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"devDependencies": {
+		"copy-webpack-plugin": "^12.0.2",
+		"html-webpack-plugin": "^5.6.3",
+		"webpack": "^5.97.1",
+		"webpack-cli": "^6.0.1"
+	},
+	"dependencies": {
+		"fs-extra": "^11.2.0"
+	}
+}

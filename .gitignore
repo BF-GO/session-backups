@@ -1,2 +1,5 @@
 /extension.crx
 /extension.pem
+/node_modules
+/project-architecture.txt
+/package-lock.json

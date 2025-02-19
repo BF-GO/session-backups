@@ -1,0 +1,1215 @@
+/* Подключение шрифта Roboto */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* Переменные темы */
+:root {
+	/* Основные цвета */
+	--background-color: #f0f0f0; /* Немного тёмнее для лучшего контраста */
+	--text-color: #2c3e50;
+	--primary-color: #3498db;
+	--primary-hover: #2980b9;
+	--secondary-color: #2ecc71;
+	--secondary-hover: #27ae60;
+	--border-color: #cccccc; /* Немного тёмнее для лучшей видимости границ */
+
+	/* Фоновые цвета */
+	--card-background: #ffffff;
+	--modal-background: rgba(0, 0, 0, 0.5);
+	--modal-content-background: #ffffff;
+	--toggle-bg: #e0e0e0; /* Немного тёмнее для лучшего разделения */
+	--toggle-thumb: #ffffff;
+	--session-item-hover-bg: #e8e8e8; /* Немного тёмнее для эффекта наведения */
+
+	/* Типографика */
+	--font-family: 'Roboto', sans-serif;
+
+	/* Скроллбар */
+	--scrollbar-width: 8px;
+	--scrollbar-thumb: rgba(0, 0, 0, 0.2);
+	--scrollbar-thumb-hover: rgba(0, 0, 0, 0.4);
+
+	/* Дополнительные переменные для светлой темы */
+	--header-background: #ffffff;
+	--button-background: #3498db;
+	--button-hover: #2980b9;
+	--input-background: #ffffff;
+	--input-border: #cccccc; /* Немного тёмнее для лучшей видимости */
+}
+
+/* Темная тема */
+.dark-theme {
+	/* Основные цвета */
+	--background-color: #121212;
+	--text-color: #e0e0e0;
+
+	/* Цвета элементов интерфейса */
+	--primary-color: #bb86fc;
+	--primary-hover: #9f6efc;
+	--secondary-color: #03dac6;
+	--secondary-hover: #029eaa;
+
+	/* Цвета границ и карточек */
+	--border-color: #272727;
+	--card-background: #1e1e1e;
+
+	/* Переключатели и кнопки */
+	--toggle-bg: #333333;
+	--toggle-thumb: #bb86fc;
+	--session-item-hover-bg: #2c2c2c;
+
+	/* Модальные окна */
+	--modal-background: rgba(0, 0, 0, 0.7);
+	--modal-content-background: #2c2c2c;
+
+	/* Скроллбар */
+	--scrollbar-thumb: rgba(255, 255, 255, 0.3);
+	--scrollbar-thumb-hover: rgba(255, 255, 255, 0.6);
+
+	/* Дополнительные цвета */
+	--header-background: #1f1f1f;
+	--button-background: #bb86fc;
+	--button-hover: #9f6efc;
+	--input-background: #2c2c2c;
+	--input-border: #444444;
+}
+
+/* Общие стили */
+body,
+html {
+	font-family: var(--font-family);
+	height: auto;
+	margin: 0;
+	padding: 0;
+	background-color: var(--background-color);
+	color: var(--text-color);
+	transition: background-color 0.3s, color 0.3s;
+}
+
+/* Основной контейнер */
+main {
+	background-color: var(--card-background);
+	width: 410px;
+	height: 596px;
+	overflow: hidden;
+	border-radius: 10px;
+	transition: background-color 0.3s;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Добавлена тень */
+}
+
+/* Контейнер вкладок */
+.tab-container {
+	background-color: var(--header-background);
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	overflow: hidden;
+	transition: background-color 0.3s;
+}
+
+/* Вкладки */
+.tabs {
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	padding: 10px 0;
+}
+
+.tab-button {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	cursor: pointer;
+	flex-grow: 1;
+	width: 90px;
+	padding: 10px 0;
+	border: none;
+	border-bottom: 3px solid transparent;
+	border-radius: 12px 12px 0 0;
+	background-color: var(--card-background);
+	color: var(--text-color);
+	transition: background-color 0.3s, border-bottom 0.3s, transform 0.2s;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Добавлена лёгкая тень */
+}
+
+.tab-button:hover {
+	background-color: var(--session-item-hover-bg);
+	transform: translateY(-2px);
+}
+
+.tab-button.active {
+	border-bottom: 3px solid var(--primary-color);
+	background-color: var(--session-item-hover-bg);
+}
+
+.tab-button.active .tab-icon {
+	transform: scale(1.1);
+}
+
+.tab-button .tab-icon {
+	width: 24px;
+	height: 24px;
+	margin-bottom: 4px;
+	transition: transform 0.3s;
+}
+
+/* Контейнер контента */
+#contentContainer {
+	flex-grow: 1;
+	overflow-y: auto;
+	background-color: var(--background-color);
+	width: 390px;
+	height: 500px;
+	margin: auto;
+	margin-bottom: 10px;
+	border-radius: 10px;
+	opacity: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	transition: background-color 0.3s, opacity 0.5s;
+	animation: fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+	to {
+		opacity: 1;
+	}
+}
+
+/* Внутренний контент вкладок */
+.tab-inner-content {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: nowrap;
+	gap: 12px;
+	margin-left: calc(6px + var(--scrollbar-width));
+	margin-right: 6px;
+}
+
+/* Заголовки */
+h1,
+h2,
+h3 {
+	color: var(--text-color);
+}
+
+h1 {
+	font-size: 24px;
+}
+
+h2 {
+	font-size: 18px;
+}
+
+h3 {
+	font-size: 16px;
+	border-bottom: 1px solid var(--border-color); /* Добавлена граница для разделения */
+	padding-bottom: 5px;
+}
+
+/* Абзацы и ссылки */
+p {
+	font-size: 16px;
+	color: var(--text-color);
+}
+
+.session-list p {
+	color: #7f8c8d; /* Более светлый цвет для описаний */
+}
+
+/* Кнопки */
+.button,
+.button-small {
+	display: inline-flex;
+	align-items: center;
+	background-color: var(--button-background);
+	color: white;
+	padding: 10px 20px;
+	font-size: 14px;
+	border: none;
+	border-radius: 30px;
+	cursor: pointer;
+	text-decoration: none;
+	transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Добавлена тень для глубины */
+}
+
+.button-small {
+	padding: 8px 16px;
+}
+
+.button:hover,
+.button-small:hover {
+	background-color: var(--button-hover);
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+	transform: translateY(-2px);
+}
+
+.button:active,
+.button-small:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button .button-icon,
+.button-small .button-icon {
+	width: 20px;
+	height: 20px;
+	margin-right: 8px;
+}
+
+/* Контролы сессий */
+.sessions-controls {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+}
+
+.sessions-controls-top {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+}
+
+.sessions-controls-top input[type='text'] {
+	flex-grow: 1;
+	padding: 10px;
+	border: 1px solid var(--input-border);
+	border-radius: 30px;
+	background-color: var(--input-background);
+	color: var(--text-color);
+	transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.sessions-controls-top input[type='text']:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 5px rgba(52, 152, 219, 0.5); /* Добавлена тень при фокусе */
+}
+
+.sessions-controls-top input[type='text']::placeholder {
+	color: #7f8c8d; /* Более светлый серый для плейсхолдера */
+	opacity: 1;
+}
+
+.sessions-controls-top .button-small {
+	padding: 8px 16px;
+}
+
+.sessions-controls .button {
+	width: 100%;
+	padding: 10px 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	margin-top: 10px;
+}
+
+/* Контейнер сессий */
+.sessions-container {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	width: 100%;
+	height: 500px;
+}
+
+/* Список сессий */
+.session-list {
+	flex: 1;
+	background-color: var(--card-background);
+	padding: 15px;
+	border-radius: 12px;
+	border: 1px solid var(--border-color);
+	max-height: 400px;
+	overflow-y: auto;
+	transition: background-color 0.3s, border-color 0.3s;
+}
+
+.session-list h3 {
+	margin-top: 0;
+	margin-bottom: 8px;
+	color: var(--text-color);
+	border-bottom: 1px solid var(--border-color); /* Разделитель между заголовком и списком */
+	padding-bottom: 5px;
+}
+
+.session-list p {
+	margin: 0;
+	color: #7f8c8d; /* Более светлый цвет для описаний */
+}
+
+/* Элемент сессии */
+.session-item {
+	display: flex;
+	flex-direction: column;
+	padding: 10px;
+	margin-bottom: 6px;
+	background-color: var(--card-background);
+	border-bottom: 1px solid var(--border-color);
+	border-left: 4px solid var(--primary-color);
+	border-radius: 10px;
+	transition: background-color 0.3s, transform 0.3s;
+}
+
+.session-item:last-child {
+	border-bottom: none;
+}
+
+.session-item:hover {
+	background-color: var(--session-item-hover-bg);
+	transform: scale(1.01);
+}
+
+/* Заголовок сессии */
+.session-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.session-header span {
+	font-weight: 500;
+	font-size: 16px;
+	color: var(--text-color);
+}
+
+/* Детали сессии */
+.session-details {
+	padding: 10px 20px;
+	margin-top: 10px;
+	border-top: 1px solid var(--border-color);
+	background-color: var(--card-background);
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+/* Кнопка восстановления */
+.restore-btn {
+	margin-top: 10px;
+	background-color: var(--secondary-color);
+	color: white;
+	padding: 6px 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.3s, transform 0.2s;
+}
+
+.restore-btn:hover {
+	background-color: var(--secondary-hover);
+	transform: translateY(-1px);
+}
+
+.restore-btn:active {
+	transform: translateY(0);
+}
+
+/* Элементы окна */
+.window-item {
+	margin-bottom: 15px;
+}
+
+.window-item p {
+	font-weight: 500;
+	margin-bottom: 10px;
+}
+
+/* Контейнер вкладок (активный/неактивный) */
+.tabs-container {
+	display: none;
+	padding-left: 20px;
+	margin-bottom: 10px;
+}
+
+.tabs-container.active {
+	display: block;
+	animation: slideDown 0.3s forwards;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Список вкладок */
+.tabs-container ul {
+	list-style: none;
+	padding-left: 0;
+	padding-right: 20px;
+	margin: 0;
+}
+
+.tabs-container ul li {
+	display: flex;
+	align-items: center;
+	padding: 5px 0;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.tabs-container ul li:last-child {
+	border-bottom: none;
+}
+
+.tabs-container ul li a {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	color: var(--primary-color);
+	text-decoration: none;
+	transition: color 0.3s;
+}
+
+.tabs-container ul li a:hover {
+	color: var(--primary-hover);
+}
+
+/* Контент вкладки */
+.tab-content {
+	width: 100%;
+}
+
+.tab-content .header {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	position: relative;
+}
+
+.tab-content .header h1,
+.tab-content .header h2 {
+	font-size: 24px;
+	margin: 0;
+	color: var(--text-color);
+	flex-grow: 1;
+	text-align: center;
+}
+
+.tab-content .header .back-button {
+	position: absolute;
+	left: 0;
+}
+
+.tab-content .header .back-button img {
+	width: 24px;
+	height: 24px;
+}
+
+/* Настройки */
+.settings-items {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.setting-item {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	padding: 15px;
+	background-color: var(--card-background);
+	border-radius: 12px;
+	transition: background-color 0.3s;
+}
+
+.setting-item:hover {
+	background-color: var(--session-item-hover-bg);
+}
+
+.setting-icon {
+	width: 24px;
+	height: 24px;
+}
+
+.setting-icon img {
+	width: 100%;
+	height: 100%;
+}
+
+.toggle-label {
+	font-size: 16px;
+	color: var(--text-color);
+	flex: 1;
+}
+
+.setting-item input[type='number'] {
+	width: 80px;
+	padding: 8px;
+	border: 1px solid var(--input-border);
+	border-radius: 4px;
+	background-color: var(--input-background);
+	color: var(--text-color);
+	transition: background-color 0.3s, border-color 0.3s;
+}
+
+.setting-item input[type='number']:focus {
+	outline: none;
+	border-color: var(--primary-color);
+}
+
+.setting-item input[type='number']::placeholder {
+	color: #7f8c8d;
+	opacity: 1;
+}
+
+.import-export-container {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	grid-template-rows: auto auto;
+	gap: 10px;
+	align-items: start;
+}
+
+.import-export-container h3 {
+	grid-column: 1 / 2;
+	grid-row: 1 / span 2;
+	align-self: center;
+}
+
+.import-export-container button {
+	grid-column: 2;
+	width: 100%;
+}
+
+#importBtn {
+	grid-row: 1; /* Располагает кнопку "Экспортировать Сессии" в первой строке второго столбца */
+}
+
+#exportBtn {
+	grid-row: 2; /* Располагает кнопку "Импортировать Сессии" во второй строке второго столбца */
+}
+
+/* Переключатели */
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 50px;
+	height: 28px;
+	flex-shrink: 0;
+}
+
+.switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.slider {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	cursor: pointer;
+	background-color: var(--toggle-bg);
+	border-radius: 34px;
+	transition: background-color 0.4s, box-shadow 0.4s;
+}
+
+.slider::before {
+	content: '';
+	position: absolute;
+	width: 24px;
+	height: 24px;
+	top: 2px;
+	left: 2px;
+	background-color: var(--toggle-thumb);
+	border-radius: 50%;
+	transition: transform 0.4s, box-shadow 0.2s;
+}
+
+.switch input:checked + .slider {
+	background-color: var(--primary-color);
+}
+
+.switch input:checked + .slider::before {
+	transform: translateX(22px);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.switch:hover .slider {
+	background-color: var(--primary-hover);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Контейнер переключения темы */
+.theme-toggle-container {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.theme-toggle-container .switch {
+	margin: 0 10px;
+}
+
+/* Скроллбар */
+#contentContainer::-webkit-scrollbar,
+.tabs-container::-webkit-scrollbar,
+.session-list::-webkit-scrollbar {
+	width: var(--scrollbar-width);
+	height: 8px;
+}
+
+#contentContainer::-webkit-scrollbar-track {
+	margin: 90px 0 52px 0;
+}
+
+.tabs-container::-webkit-scrollbar-track,
+.session-list::-webkit-scrollbar-track {
+	background: transparent;
+	margin: 8px 0;
+}
+
+#contentContainer::-webkit-scrollbar-thumb,
+.tabs-container::-webkit-scrollbar-thumb,
+.session-list::-webkit-scrollbar-thumb {
+	background-color: var(--scrollbar-thumb);
+	border: 1px solid transparent;
+	border-radius: 4px;
+}
+
+#contentContainer::-webkit-scrollbar-thumb:hover,
+.tabs-container::-webkit-scrollbar-thumb:hover,
+.session-list::-webkit-scrollbar-thumb:hover {
+	background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Кнопки возврата */
+.back-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: transform 0.3s;
+}
+
+.back-button:hover {
+	transform: rotate(90deg);
+}
+
+.back-button img {
+	width: 24px;
+	height: 24px;
+}
+
+/* Плавные переходы для интерактивных элементов */
+.tab-button,
+.button,
+.button-small,
+.setting-item,
+.switch .slider {
+	transition: background-color 0.3s, color 0.3s, transform 0.3s;
+}
+
+/* Стили для деталей группы */
+.group-details {
+	background-color: var(--modal-content-background);
+	padding: 15px;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	margin-top: 10px;
+	transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+/* Стили для списка сессий в группе */
+.group-details ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.group-details ul li {
+	padding: 8px 0;
+	border-bottom: 1px solid var(--border-color);
+	transition: background-color 0.3s;
+}
+
+.group-details ul li:last-child {
+	border-bottom: none;
+}
+
+.group-details ul li a {
+	color: var(--primary-color);
+	text-decoration: none;
+	transition: color 0.3s;
+}
+
+.group-details ul li a:hover {
+	color: var(--primary-hover);
+}
+
+/* Кнопка восстановления группы */
+.restore-group-btn {
+	margin-top: 15px;
+	background-color: var(--secondary-color);
+	color: white;
+	padding: 8px 16px;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.3s, transform 0.2s;
+}
+
+.restore-group-btn:hover {
+	background-color: var(--secondary-hover);
+	transform: translateY(-2px);
+}
+
+.restore-group-btn:active {
+	transform: translateY(0);
+}
+
+/* --- Диалоговое оверлейное окно --- */
+
+/* Overlay для диалоговых окон */
+.dialog-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: var(--modal-background);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Активное состояние overlay */
+.dialog-overlay.active {
+	opacity: 1;
+	visibility: visible;
+}
+
+/* Контейнер диалога */
+.save-session-dialog {
+	background: var(--modal-content-background);
+	padding: 30px;
+	border-radius: 12px;
+	width: 400px;
+	max-width: 90%;
+	max-height: 80%;
+	overflow-y: auto;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	transform: translateY(-50px);
+	opacity: 0;
+	transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Анимация появления диалога */
+.dialog-overlay.active .save-session-dialog {
+	transform: translateY(0);
+	opacity: 1;
+}
+
+/* Стили для содержимого диалога */
+.dialog-content h2 {
+	margin-top: 0;
+	font-size: 24px;
+	color: var(--text-color);
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+.dialog-content label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: var(--text-color);
+}
+
+.dialog-content input[type='text'] {
+	width: 100%;
+	padding: 10px;
+	margin-bottom: 20px;
+	box-sizing: border-box;
+	border: 1px solid var(--input-border);
+	border-radius: 6px;
+	background-color: var(--input-background);
+	color: var(--text-color);
+	transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.dialog-content input[type='text']:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+/* Секция выбора окон */
+#windowSelectionContainer {
+	max-height: 200px;
+	overflow-y: auto;
+	padding: 10px;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	background-color: var(--card-background);
+	margin-bottom: 20px;
+}
+
+#windowSelectionContainer label {
+	display: flex;
+	align-items: center;
+	margin-bottom: 10px;
+	cursor: pointer;
+	color: var(--text-color);
+	transition: background-color 0.3s;
+	padding: 5px;
+	border-radius: 4px;
+}
+
+#windowSelectionContainer label:hover {
+	background-color: var(--session-item-hover-bg);
+}
+
+.window-checkbox {
+	margin-right: 10px;
+	width: 18px;
+	height: 18px;
+	cursor: pointer;
+}
+
+/* Стили для кнопок в диалоге */
+.dialog-content .button {
+	padding: 10px 20px;
+	font-size: 14px;
+	border-radius: 30px;
+	cursor: pointer;
+	transition: background-color 0.3s, transform 0.2s;
+	margin: 10px 5px 0 0;
+}
+
+#saveSessionConfirmBtn {
+	background-color: var(--primary-color);
+	color: white;
+}
+
+#saveSessionConfirmBtn:hover {
+	background-color: var(--primary-hover);
+	transform: translateY(-2px);
+}
+
+#saveSessionConfirmBtn:active {
+	transform: translateY(0);
+}
+
+#cancelSessionBtn {
+	background-color: var(--border-color);
+	color: var(--text-color);
+}
+
+#cancelSessionBtn:hover {
+	background-color: var(--session-item-hover-bg);
+	transform: translateY(-2px);
+}
+
+#cancelSessionBtn:active {
+	transform: translateY(0);
+}
+
+/* Адаптивные стили для кнопок */
+@media (max-width: 420px) {
+	.dialog-content .button {
+		width: 100%;
+		margin: 10px 0 0 0;
+	}
+}
+/* --- Стили для вкладки "Планирование" --- */
+
+/* Контейнер планирования */
+#schedule .schedule-container {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding: 20px;
+}
+
+/* Форма планирования */
+#schedule .schedule-form {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	background-color: var(--card-background);
+	padding: 20px;
+	border-radius: 12px;
+	border: 1px solid var(--border-color);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+#schedule .schedule-form:hover {
+	background-color: var(--session-item-hover-bg);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Радио-кнопки выбора типа планировки */
+.schedule-option {
+	display: flex;
+	gap: 20px;
+}
+
+.schedule-option label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	font-weight: 500;
+	color: var(--text-color);
+}
+
+.schedule-option input[type='radio'] {
+	cursor: pointer;
+}
+
+/* Опции для выбора сессии */
+#sessionScheduleOptions,
+#customScheduleOptions {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+#schedule .schedule-form label[for='sessionSelect'],
+#schedule .schedule-form label[for='scheduleDateTime'] {
+	font-weight: 500;
+	color: var(--text-color);
+}
+
+/* Выбор сессии */
+#sessionSelect {
+	padding: 10px;
+	border: 1px solid var(--input-border);
+	border-radius: 6px;
+	background-color: var(--input-background);
+	color: var(--text-color);
+	transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#sessionSelect:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+/* Ввод даты и времени */
+#scheduleDateTime {
+	padding: 10px;
+	border: 1px solid var(--input-border);
+	border-radius: 6px;
+	background-color: var(--input-background);
+	color: var(--text-color);
+	transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#scheduleDateTime:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+/* Кнопка добавления планировки */
+#addScheduleBtn {
+	align-self: flex-start;
+	background-color: var(--secondary-color);
+	color: white;
+	padding: 10px 20px;
+	font-size: 14px;
+	border: none;
+	border-radius: 30px;
+	cursor: pointer;
+	transition: background-color 0.3s, transform 0.2s;
+}
+
+#addScheduleBtn:hover {
+	background-color: var(--secondary-hover);
+	transform: translateY(-2px);
+}
+
+#addScheduleBtn:active {
+	transform: translateY(0);
+}
+
+/* Список запланированных сессий */
+.scheduled-list {
+	background-color: var(--card-background);
+	padding: 15px;
+	border-radius: 12px;
+	border: 1px solid var(--border-color);
+	max-height: 300px;
+	overflow-y: auto;
+	transition: background-color 0.3s, border-color 0.3s;
+}
+
+.scheduled-list h3 {
+	margin-top: 0;
+	margin-bottom: 10px;
+	color: var(--text-color);
+	border-bottom: 1px solid var(--border-color);
+	padding-bottom: 5px;
+}
+
+#scheduledSessionsList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+#scheduledSessionsList li {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--border-color);
+	transition: background-color 0.3s;
+}
+
+#scheduledSessionsList li:last-child {
+	border-bottom: none;
+}
+
+#scheduledSessionsList li:hover {
+	background-color: var(--session-item-hover-bg);
+}
+
+/* Описание запланированной сессии */
+#scheduledSessionsList li span {
+	font-weight: 500;
+	color: var(--text-color);
+}
+
+/* Кнопка отмены запланированной сессии */
+#scheduledSessionsList li .button-small {
+	background-color: var(--primary-color);
+	color: white;
+	padding: 6px 12px;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.3s, transform 0.2s;
+}
+
+#scheduledSessionsList li .button-small:hover {
+	background-color: var(--primary-hover);
+	transform: translateY(-2px);
+}
+
+#scheduledSessionsList li .button-small:active {
+	transform: translateY(0);
+}
+
+/* Ввод пользовательских ссылок */
+#customUrlsContainer .url-input-group {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+#customUrlsContainer .url-input-group input[type='url'] {
+	flex-grow: 1;
+	padding: 8px;
+	border: 1px solid var(--input-border);
+	border-radius: 6px;
+	background-color: var(--input-background);
+	color: var(--text-color);
+	transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#customUrlsContainer .url-input-group input[type='url']:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+#customUrlsContainer .url-input-group .remove-url-btn {
+	background-color: #e74c3c;
+	color: white;
+	border: none;
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	cursor: pointer;
+	font-size: 18px;
+	line-height: 0;
+	transition: background-color 0.3s, transform 0.2s;
+}
+
+#customUrlsContainer .url-input-group .remove-url-btn:hover {
+	background-color: #c0392b;
+	transform: scale(1.1);
+}
+
+#customUrlsContainer .url-input-group .remove-url-btn:active {
+	transform: scale(1);
+}
+
+/* Кнопка добавления новой ссылки */
+#addUrlBtn {
+	align-self: flex-start;
+	background-color: var(--primary-color);
+	color: white;
+	padding: 6px 12px;
+	border: none;
+	border-radius: 30px;
+	cursor: pointer;
+	transition: background-color 0.3s, transform 0.2s;
+}
+
+#addUrlBtn:hover {
+	background-color: var(--primary-hover);
+	transform: translateY(-2px);
+}
+
+#addUrlBtn:active {
+	transform: translateY(0);
+}
+
+@media (max-width: 420px) {
+	main {
+		width: 100%;
+		height: 100%;
+		border-radius: 0;
+	}
+
+	#contentContainer {
+		width: 100%;
+		margin: 0;
+		border-radius: 0;
+	}
+
+	.schedule-container {
+		padding: 10px;
+	}
+
+	#schedule .schedule-form,
+	.scheduled-list {
+		padding: 15px;
+	}
+
+	.schedule-option {
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	#addScheduleBtn,
+	#addUrlBtn {
+		width: 100%;
+	}
+
+	/* .sessions-controls-top .button-small {
+		width: 100%;
+	} */
+}

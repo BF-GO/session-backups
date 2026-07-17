@@ -11,6 +11,7 @@ export default tseslint.config(
       'coverage/**',
       'extension/**',
       'eslint.config.js',
+      'scripts/capture-store-assets.mjs',
     ],
   },
   eslint.configs.recommended,

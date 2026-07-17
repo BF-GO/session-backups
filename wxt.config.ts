@@ -14,14 +14,18 @@ export default defineConfig({
     permissions: ['tabs', 'storage', 'alarms', 'notifications', 'tabGroups'],
     icons: {
       16: 'icon16.png',
+      32: 'icon32.png',
       48: 'icon48.png',
       96: 'icon96.png',
+      128: 'icon128.png',
     },
     action: {
       default_icon: {
         16: 'icon16.png',
+        32: 'icon32.png',
         48: 'icon48.png',
         96: 'icon96.png',
+        128: 'icon128.png',
       },
     },
     content_security_policy: {

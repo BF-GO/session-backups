@@ -1,6 +1,12 @@
 # Chrome Web Store assets
 
-All upload-ready images are PNG files in RGB mode without transparency.
+All upload-ready screenshots and promo images are PNG files in RGB mode without transparency. The store icon uses RGBA transparency as recommended by Chrome.
+
+## Store icon
+
+- `icon/session-saver-store-icon-128x128.png` — Chrome Web Store icon, 128×128 RGBA PNG.
+- The 96×96 artwork is centered with 16 px of transparent padding on every side, following Chrome's store guidance.
+- Matching extension icons are generated in `extension/icons/` at 16, 32, 48, 96, and 128 px.
 
 ## Screenshots
 
@@ -30,6 +36,7 @@ A YouTube promo URL is not included. Recording, editing, uploading, and publishi
 ```sh
 npm run build
 node scripts/capture-store-assets.mjs
+python scripts/prepare-store-assets.py --icons
 python scripts/prepare-store-assets.py --screenshots
 python scripts/prepare-store-assets.py --promos
 ```

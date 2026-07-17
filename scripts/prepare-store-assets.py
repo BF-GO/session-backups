@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +13,8 @@ SCREENSHOTS = ASSETS / "screenshots"
 SOURCE = ASSETS / "source" / "generated"
 PROMO = ASSETS / "promo"
 ICON_PATH = ROOT / "extension" / "icons" / "icon96.png"
+ICON_MASTER = SOURCE / "session-saver-icon-master.png"
+STORE_ICON = ASSETS / "icon" / "session-saver-store-icon-128x128.png"
 
 
 def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
@@ -23,6 +25,50 @@ def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
 def save_rgb(image: Image.Image, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     image.convert("RGB").save(path, "PNG", optimize=True)
+
+
+def save_rgba(image: Image.Image, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image.convert("RGBA").save(path, "PNG", optimize=True)
+
+
+def make_icons() -> None:
+    master = Image.open(ICON_MASTER).convert("RGB")
+    side = min(master.size)
+    left = (master.width - side) // 2
+    top = (master.height - side) // 2
+    artwork = master.crop((left, top, left + side, top + side)).convert("RGBA")
+
+    # Image generation leaves dark pixels outside the rounded app tile. Replace
+    # them with real transparency so Chrome can render the icon on any theme.
+    mask = Image.new("L", artwork.size, 0)
+    radius = round(side * 0.125)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (1, 1, side - 2, side - 2),
+        radius=radius,
+        fill=255,
+    )
+    artwork.putalpha(mask)
+
+    icon_directory = ROOT / "extension" / "icons"
+    for size in (16, 32, 48, 96):
+        resized = artwork.resize((size, size), Image.Resampling.LANCZOS)
+        output_mask = Image.new("L", (size, size), 0)
+        ImageDraw.Draw(output_mask).rounded_rectangle(
+            (0, 0, size - 1, size - 1),
+            radius=max(2, round(size * 0.125)),
+            fill=255,
+        )
+        resized.putalpha(ImageChops.multiply(resized.getchannel("A"), output_mask))
+        save_rgba(resized, icon_directory / f"icon{size}.png")
+
+    # Chrome recommends 16 px of transparent padding around the 96 px artwork
+    # used for the 128 px Web Store / installation icon.
+    store_artwork = artwork.resize((96, 96), Image.Resampling.LANCZOS)
+    store_icon = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    store_icon.alpha_composite(store_artwork, (16, 16))
+    save_rgba(store_icon, icon_directory / "icon128.png")
+    save_rgba(store_icon, STORE_ICON)
 
 
 def cover(image: Image.Image, size: tuple[int, int], focus_x: float = 0.5) -> Image.Image:
@@ -171,11 +217,14 @@ def make_marquee() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--icons", action="store_true")
     parser.add_argument("--screenshots", action="store_true")
     parser.add_argument("--promos", action="store_true")
     args = parser.parse_args()
-    if not args.screenshots and not args.promos:
-        args.screenshots = args.promos = True
+    if not args.icons and not args.screenshots and not args.promos:
+        args.icons = args.screenshots = args.promos = True
+    if args.icons:
+        make_icons()
     if args.screenshots:
         make_screenshots()
     if args.promos:

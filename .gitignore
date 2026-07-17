@@ -1,2 +1,7 @@
-/extension.crx
-/extension.pem
+node_modules/
+.output/
+.wxt/
+coverage/
+*.crx
+*.zip
+*.pem

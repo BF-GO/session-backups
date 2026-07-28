@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible Session Saver problem using synthetic data.
+title: '[Bug]: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Session Saver. Do not include private browsing data or security vulnerabilities here.
+  - type: input
+    id: version
+    attributes:
+      label: Session Saver version
+      placeholder: 2.0.0
+    validations:
+      required: true
+  - type: input
+    id: chrome
+    attributes:
+      label: Chrome and operating-system version
+      placeholder: Chrome 140 on Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the expected and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Use synthetic domains and remove account or browsing details.
+      placeholder: |
+        1. Load the extension
+        2. Create a snapshot containing https://example.test/
+        3. Select Restore
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or screenshots
+      description: Remove tokens, private URLs, names, and browsing history before attaching anything.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed private browsing data and credentials.
+          required: true
+        - label: This is not an undisclosed security vulnerability.
+          required: true

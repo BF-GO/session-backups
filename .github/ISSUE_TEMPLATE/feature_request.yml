@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest a focused improvement that preserves the local-first privacy boundary.
+title: '[Feature]: '
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful outcome, not only a UI treatment.
+    validations:
+      required: true
+  - type: dropdown
+    id: permissions
+    attributes:
+      label: Permission impact
+      options:
+        - No new Chrome permission
+        - Existing permission used differently
+        - New permission may be required
+    validations:
+      required: true
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy and migration considerations
+      description: Explain effects on local data, imports/exports, compatibility, or network access.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: The proposal does not require real browsing data in examples or fixtures.
+          required: true

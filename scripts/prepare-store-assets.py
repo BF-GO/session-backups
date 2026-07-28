@@ -9,10 +9,10 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "store-assets"
 RAW_SCREENSHOTS = ASSETS / "screenshots" / "raw"
-SCREENSHOTS = ASSETS / "screenshots"
+SCREENSHOTS = ROOT / "docs" / "assets" / "screenshots"
 SOURCE = ASSETS / "source" / "generated"
 PROMO = ASSETS / "promo"
-ICON_PATH = ROOT / "extension" / "icons" / "icon96.png"
+ICON_PATH = ROOT / "public" / "icon96.png"
 ICON_MASTER = SOURCE / "session-saver-icon-master.png"
 STORE_ICON = ASSETS / "icon" / "session-saver-store-icon-128x128.png"
 
@@ -50,7 +50,7 @@ def make_icons() -> None:
     )
     artwork.putalpha(mask)
 
-    icon_directory = ROOT / "extension" / "icons"
+    icon_directory = ROOT / "public"
     for size in (16, 32, 48, 96):
         resized = artwork.resize((size, size), Image.Resampling.LANCZOS)
         output_mask = Image.new("L", (size, size), 0)

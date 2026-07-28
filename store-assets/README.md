@@ -6,11 +6,11 @@ All upload-ready screenshots and promo images are PNG files in RGB mode without 
 
 - `icon/session-saver-store-icon-128x128.png` — Chrome Web Store icon, 128×128 RGBA PNG.
 - The 96×96 artwork is centered with 16 px of transparent padding on every side, following Chrome's store guidance.
-- Matching extension icons are generated in `extension/icons/` at 16, 32, 48, 96, and 128 px.
+- Matching extension icons are generated in `public/` at 16, 32, 48, 96, and 128 px.
 
 ## Screenshots
 
-Upload files from `screenshots/` in numeric order. Each final screenshot is 1280×800:
+Upload files from `../docs/assets/screenshots/` in numeric order. Each final screenshot is 1280×800:
 
 1. `screenshot-01-library-overview.png` — session library and detailed window/tab view.
 2. `screenshot-02-pinned-sessions.png` — pinned sessions filter.

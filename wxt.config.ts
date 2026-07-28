@@ -3,14 +3,13 @@ import { defineConfig } from 'wxt';
 
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
-  publicDir: 'extension/icons',
+  publicDir: 'public',
   vite: () => ({
     plugins: [tailwindcss()],
   }),
   manifest: {
     name: 'Session Saver',
     description: 'Automatic browser session recovery and snapshots.',
-    version: '2.0.0',
     permissions: ['tabs', 'storage', 'alarms', 'notifications', 'tabGroups'],
     icons: {
       16: 'icon16.png',

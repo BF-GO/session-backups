@@ -9,7 +9,6 @@ export default tseslint.config(
       '.output/**',
       '.wxt/**',
       'coverage/**',
-      'extension/**',
       'eslint.config.js',
       'scripts/capture-store-assets.mjs',
     ],

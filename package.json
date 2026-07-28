@@ -8,12 +8,13 @@
     "build": "wxt build",
     "zip": "wxt zip",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

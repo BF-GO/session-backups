@@ -1,0 +1,121 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Validate and release
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Test
+        run: npm run test
+
+      - name: Generate coverage
+        run: npm run test:coverage
+
+      - name: Build production extension
+        run: npm run build
+
+      - name: Resolve and verify release version
+        id: version
+        shell: bash
+        run: |
+          package_version="$(node -p "require('./package.json').version")"
+          manifest_version="$(node -p "require('./.output/chrome-mv3/manifest.json').version")"
+          expected_tag="v${package_version}"
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            release_tag="${GITHUB_REF_NAME}"
+          else
+            release_tag="$expected_tag"
+          fi
+          if [[ "$package_version" != "$manifest_version" ]]; then
+            echo "Version mismatch: package=$package_version manifest=$manifest_version" >&2
+            exit 1
+          fi
+          if [[ "$release_tag" != "$expected_tag" ]]; then
+            echo "Tag mismatch: expected=$expected_tag actual=$release_tag" >&2
+            exit 1
+          fi
+          echo "package_version=$package_version" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create archive and checksum
+        id: artifact
+        shell: bash
+        run: |
+          npm run zip
+          zip_path="$(find .output -maxdepth 1 -type f -name '*-${{ steps.version.outputs.package_version }}-chrome.zip' -print -quit)"
+          if [[ -z "$zip_path" ]]; then
+            echo "Release ZIP was not created." >&2
+            exit 1
+          fi
+          checksum_path="${zip_path}.sha256"
+          zip_name="$(basename "$zip_path")"
+          checksum_name="$(basename "$checksum_path")"
+          (
+            cd "$(dirname "$zip_path")"
+            sha256sum "$zip_name" > "$checksum_name"
+          )
+          echo "zip_path=$zip_path" >> "$GITHUB_OUTPUT"
+          echo "checksum_path=$checksum_path" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: session-saver-${{ steps.version.outputs.package_version }}-release
+          path: |
+            ${{ steps.artifact.outputs.zip_path }}
+            ${{ steps.artifact.outputs.checksum_path }}
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+          ZIP_PATH: ${{ steps.artifact.outputs.zip_path }}
+          CHECKSUM_PATH: ${{ steps.artifact.outputs.checksum_path }}
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists." >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" "$ZIP_PATH" "$CHECKSUM_PATH" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Session Saver $RELEASE_TAG" \
+            --notes "Chrome Manifest V3 package and SHA-256 checksum. See CHANGELOG.md for verified release details."

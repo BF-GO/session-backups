@@ -4,6 +4,18 @@ import { STORAGE_KEY } from '../validation/session-schema';
 import { loadOrMigrateStorage } from './migration';
 import { MemoryStorageAdapter } from './storage-adapter';
 
+class VerificationFailureStorage extends MemoryStorageAdapter {
+  private readCount = 0;
+
+  override get(keys: string[]): Promise<Record<string, unknown>> {
+    this.readCount += 1;
+    if (this.readCount === 2) {
+      return Promise.resolve({ [STORAGE_KEY]: { damaged: true } });
+    }
+    return super.get(keys);
+  }
+}
+
 function idFactory(): () => string {
   let id = 0;
   return () => `id-${++id}`;
@@ -85,5 +97,25 @@ describe('legacy migration', () => {
     ).rejects.toThrow('Legacy migration stopped');
     expect(storage.values.autoSessions).toEqual(legacy);
     expect(storage.values[STORAGE_KEY]).toBeUndefined();
+  });
+
+  it('keeps legacy keys after interrupted verification and cleans them on retry', async () => {
+    const legacy = [
+      {
+        timestamp: 100,
+        windows: [{ tabs: [{ url: 'https://retry.example.test/' }] }],
+      },
+    ];
+    const storage = new VerificationFailureStorage({ autoSessions: legacy });
+
+    await expect(
+      loadOrMigrateStorage(storage, idFactory(), 123),
+    ).rejects.toThrow();
+    expect(storage.values.autoSessions).toEqual(legacy);
+    expect(storage.values[STORAGE_KEY]).toBeDefined();
+
+    const recovered = await loadOrMigrateStorage(storage, idFactory(), 456);
+    expect(recovered.sessions).toHaveLength(1);
+    expect(storage.values.autoSessions).toBeUndefined();
   });
 });

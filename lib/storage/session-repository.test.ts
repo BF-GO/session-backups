@@ -6,6 +6,11 @@ import type {
   SessionStorageSettings,
 } from '../../types/session';
 import {
+  defaultStorageState,
+  MAX_SESSION_COUNT,
+  STORAGE_KEY,
+} from '../validation/session-schema';
+import {
   applyRetentionToSessions,
   SessionRepository,
 } from './session-repository';
@@ -123,6 +128,75 @@ describe('SessionRepository', () => {
     );
     expect(await repository.listSessions()).toHaveLength(20);
   });
+
+  it('merges imports by default and replaces only sessions when requested', async () => {
+    const repository = new SessionRepository(
+      new MemoryStorageAdapter(),
+      idFactory(),
+      () => 500,
+    );
+    await repository.createSession({
+      source: 'manual',
+      windows: [makeWindow('https://existing.example.test/')],
+    });
+    const settingsBefore = await repository.getSettings();
+    const payload = {
+      format: 'session-saver',
+      version: 2,
+      exportedAt: 100,
+      sessions: [makeSession('incoming', 'manual', 100)],
+    };
+
+    await repository.importSessions(payload);
+    expect(await repository.listSessions()).toHaveLength(2);
+
+    await repository.importSessions(payload, 'replace');
+    const sessions = await repository.listSessions();
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]!.source).toBe('import');
+    expect(await repository.getSettings()).toEqual(settingsBefore);
+  });
+
+  it('imports legacy collections and reports invalid legacy entries', async () => {
+    const repository = new SessionRepository(
+      new MemoryStorageAdapter(),
+      idFactory(),
+      () => 500,
+    );
+    const result = await repository.importSessions({
+      autoSessions: [
+        {
+          timestamp: 100,
+          windows: [{ tabs: [{ url: 'https://legacy.example.test/' }] }],
+        },
+        { timestamp: 'invalid', windows: [] },
+      ],
+    });
+
+    expect(result).toMatchObject({ imported: 1, skipped: 1 });
+    expect((await repository.listSessions())[0]!.source).toBe('import');
+  });
+
+  it('leaves storage unchanged when merge would exceed its session limit', async () => {
+    const state = defaultStorageState(100);
+    state.sessions = Array.from({ length: MAX_SESSION_COUNT }, (_, index) =>
+      makeSession(`existing-${index}`, 'manual', index),
+    );
+    const storage = new MemoryStorageAdapter({ [STORAGE_KEY]: state });
+    const repository = new SessionRepository(storage, idFactory(), () => 500);
+    const payload = {
+      format: 'session-saver',
+      version: 2,
+      exportedAt: 100,
+      sessions: [makeSession('incoming', 'manual', 100)],
+    };
+
+    await expect(repository.importSessions(payload)).rejects.toThrow(
+      'storage limit',
+    );
+    const stored = storage.values[STORAGE_KEY] as { sessions: SavedSession[] };
+    expect(stored.sessions).toHaveLength(MAX_SESSION_COUNT);
+  });
 });
 
 describe('applyRetentionToSessions', () => {
@@ -151,5 +225,25 @@ describe('applyRetentionToSessions', () => {
         'pinned-old-auto',
       ].sort(),
     );
+  });
+
+  it('keeps exact count boundaries and resolves equal timestamps stably', () => {
+    const boundarySettings = {
+      ...settings,
+      retention: { automatic: 2, change: 1 },
+    };
+    const sessions = [
+      makeSession('auto-first', 'automatic', 10),
+      makeSession('auto-second', 'automatic', 10),
+      makeSession('auto-third', 'automatic', 9),
+      makeSession('change-first', 'change', 20),
+      makeSession('change-second', 'change', 19),
+    ];
+
+    expect(
+      applyRetentionToSessions(sessions, boundarySettings).map(
+        (session) => session.id,
+      ),
+    ).toEqual(['auto-first', 'auto-second', 'change-first']);
   });
 });

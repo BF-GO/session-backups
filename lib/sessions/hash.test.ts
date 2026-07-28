@@ -59,4 +59,14 @@ describe('calculateSessionHash', () => {
       calculateSessionHash([original]),
     );
   });
+
+  it('is deterministic when input arrays contain tabs out of index order', () => {
+    const original = makeWindow();
+    const reordered = structuredClone(original);
+    reordered.tabs.reverse();
+
+    expect(calculateSessionHash([reordered])).toBe(
+      calculateSessionHash([original]),
+    );
+  });
 });

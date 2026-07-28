@@ -9,6 +9,20 @@ import type {
 } from '../../types/session';
 import { isSupportedUrl } from '../validation/session-schema';
 
+export const MAX_RESTORE_TABS = 2_000;
+
+export interface RestorePlanWindow {
+  savedWindow: SavedWindow;
+  tabs: SavedTab[];
+}
+
+export interface RestorePlan {
+  windows: RestorePlanWindow[];
+  selectedTabs: number;
+  skippedTabs: number;
+  errors: string[];
+}
+
 function selectedTabs(
   window: SavedWindow,
   options: RestoreOptions,
@@ -22,6 +36,41 @@ function selectedTabs(
     : window.tabs;
 
   return [...selected].sort((left, right) => left.index - right.index);
+}
+
+export function createRestorePlan(
+  session: SavedSession,
+  options: RestoreOptions = {},
+): RestorePlan {
+  const windows: RestorePlanWindow[] = [];
+  const errors: string[] = [];
+  let selectedTabCount = 0;
+  let skippedTabs = 0;
+
+  for (const savedWindow of session.windows) {
+    const selected = selectedTabs(savedWindow, options);
+    selectedTabCount += selected.length;
+    const restorable = selected.filter((tab) => {
+      if (isSupportedUrl(tab.url)) return true;
+      skippedTabs += 1;
+      errors.push(`Skipped unsupported URL: ${tab.url}`);
+      return false;
+    });
+    if (restorable.length > 0) windows.push({ savedWindow, tabs: restorable });
+  }
+
+  if (selectedTabCount > MAX_RESTORE_TABS) {
+    throw new Error(
+      `Restore exceeds the ${MAX_RESTORE_TABS}-tab safety limit. Select fewer tabs and try again.`,
+    );
+  }
+
+  return {
+    windows,
+    selectedTabs: selectedTabCount,
+    skippedTabs,
+    errors,
+  };
 }
 
 async function restoreGroups(
@@ -59,17 +108,11 @@ async function restoreWindow(
   savedWindow: SavedWindow,
   tabs: SavedTab[],
 ): Promise<{ restored: number; failed: number; errors: string[] }> {
-  const validTabs = tabs.filter((tab) => isSupportedUrl(tab.url));
-  const failed = tabs.length - validTabs.length;
-  const errors = tabs
-    .filter((tab) => !isSupportedUrl(tab.url))
-    .map((tab) => `Skipped unsupported URL: ${tab.url}`);
-
-  if (validTabs.length === 0) return { restored: 0, failed, errors };
+  const errors: string[] = [];
 
   try {
     const createdWindow = await browser.windows.create({
-      url: validTabs.map((tab) => tab.url),
+      url: tabs.map((tab) => tab.url),
       focused: savedWindow.focused,
       state: savedWindow.state,
     });
@@ -86,36 +129,31 @@ async function restoreWindow(
 
     for (
       let index = 0;
-      index < Math.min(validTabs.length, createdTabs.length);
+      index < Math.min(tabs.length, createdTabs.length);
       index += 1
     ) {
-      const savedTab = validTabs[index];
+      const savedTab = tabs[index];
       const createdTab = createdTabs[index];
       if (savedTab?.pinned && createdTab?.id !== undefined) {
         await browser.tabs.update(createdTab.id, { pinned: true });
       }
     }
 
-    const activeIndex = validTabs.findIndex((tab) => tab.active);
+    const activeIndex = tabs.findIndex((tab) => tab.active);
     const activeTab = createdTabs[activeIndex >= 0 ? activeIndex : 0];
     if (activeTab?.id !== undefined)
       await browser.tabs.update(activeTab.id, { active: true });
 
     try {
-      await restoreGroups(
-        savedWindow,
-        validTabs,
-        createdTabs,
-        createdWindow.id,
-      );
+      await restoreGroups(savedWindow, tabs, createdTabs, createdWindow.id);
     } catch (error) {
       errors.push(`Tab groups could not be restored: ${String(error)}`);
     }
 
-    const missingTabs = Math.max(0, validTabs.length - createdTabs.length);
+    const missingTabs = Math.max(0, tabs.length - createdTabs.length);
     return {
       restored: createdTabs.length,
-      failed: failed + missingTabs,
+      failed: missingTabs,
       errors,
     };
   } catch (error) {
@@ -131,17 +169,15 @@ export async function restoreSavedSession(
   session: SavedSession,
   options: RestoreOptions = {},
 ): Promise<RestoreResult> {
+  const plan = createRestorePlan(session, options);
   const result: RestoreResult = {
     restoredWindows: 0,
     restoredTabs: 0,
-    failedTabs: 0,
-    errors: [],
+    failedTabs: plan.skippedTabs,
+    errors: [...plan.errors],
   };
 
-  for (const savedWindow of session.windows) {
-    const tabs = selectedTabs(savedWindow, options);
-    if (tabs.length === 0) continue;
-
+  for (const { savedWindow, tabs } of plan.windows) {
     const windowResult = await restoreWindow(savedWindow, tabs);
     if (windowResult.restored > 0) result.restoredWindows += 1;
     result.restoredTabs += windowResult.restored;

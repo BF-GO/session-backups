@@ -1,5 +1,6 @@
 import type {
   CreateSessionResult,
+  ImportMode,
   ImportResult,
   RestoreOptions,
   RestoreResult,
@@ -20,7 +21,7 @@ export type SessionRequest =
   | { type: 'sessions:delete'; id: string }
   | { type: 'sessions:restore'; id: string; options?: RestoreOptions }
   | { type: 'sessions:export'; id: string }
-  | { type: 'sessions:import'; payload: unknown }
+  | { type: 'sessions:import'; payload: unknown; mode?: ImportMode }
   | { type: 'settings:get' }
   | { type: 'settings:update'; patch: Partial<SessionStorageSettings> };
 

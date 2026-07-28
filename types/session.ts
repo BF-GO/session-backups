@@ -117,6 +117,8 @@ export interface SessionExport {
   sessions: SavedSession[];
 }
 
+export type ImportMode = 'merge' | 'replace';
+
 export interface ImportResult {
   imported: number;
   skipped: number;

@@ -113,7 +113,10 @@ export default defineBackground(() => {
           return {
             ok: true,
             type: request.type,
-            data: await repository.importSessions(request.payload),
+            data: await repository.importSessions(
+              request.payload,
+              request.mode,
+            ),
           };
         case 'settings:get':
           return {

@@ -25,11 +25,9 @@ import {
   updateSettings,
 } from '../../lib/chrome/messaging';
 import { matchesSearch, sessionTitle } from '../../lib/ui/session-display';
-import {
-  MAX_IMPORT_BYTES,
-  sessionExportSchema,
-} from '../../lib/validation/session-schema';
+import { parseImportText } from '../../lib/sessions/import';
 import type {
+  ImportMode,
   RestoreOptions,
   SavedSession,
   SessionStorageSettings,
@@ -50,6 +48,7 @@ interface ImportPreview {
   filename: string;
   payload: unknown;
   count: number;
+  mode: ImportMode;
 }
 
 function applyTheme(theme: SessionStorageSettings['theme']): void {
@@ -158,39 +157,20 @@ export function App() {
   async function chooseImport(file: File | undefined): Promise<void> {
     if (!file) return;
     await run(async () => {
-      if (file.size > MAX_IMPORT_BYTES)
-        throw new Error('Import is larger than 5 MB.');
-      const payload: unknown = JSON.parse(await file.text());
-      const parsed = sessionExportSchema.safeParse(payload);
-      if (parsed.success) {
-        setPreview({
-          filename: file.name,
-          payload,
-          count: parsed.data.sessions.length,
-        });
-        return;
-      }
-      const legacy =
-        payload && typeof payload === 'object'
-          ? (payload as Record<string, unknown>)
-          : null;
-      const count = legacy
-        ? (Array.isArray(legacy.autoSessions)
-            ? legacy.autoSessions.length
-            : 0) +
-          (Array.isArray(legacy.changeSessions)
-            ? legacy.changeSessions.length
-            : 0)
-        : 0;
-      if (count === 0) throw new Error('Unsupported or invalid import file.');
-      setPreview({ filename: file.name, payload, count });
+      const parsed = parseImportText(await file.text(), file.size);
+      setPreview({
+        filename: file.name,
+        payload: parsed.payload,
+        count: parsed.count,
+        mode: 'merge',
+      });
     });
   }
 
   async function confirmImport(): Promise<void> {
     if (!preview) return;
     await run(async () => {
-      const result = await importSessions(preview.payload);
+      const result = await importSessions(preview.payload, preview.mode);
       setPreview(null);
       await reload();
       setStatus(`Imported ${result.imported}; skipped ${result.skipped}.`);
@@ -465,8 +445,41 @@ export function App() {
             </h2>
             <p className="text-muted-foreground mt-2 text-sm">
               {preview.filename} contains {preview.count} session
-              {preview.count === 1 ? '' : 's'}. Existing sessions will be kept.
+              {preview.count === 1 ? '' : 's'}.
             </p>
+            <fieldset className="mt-4 space-y-2">
+              <legend className="text-sm font-semibold">Import behavior</legend>
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="radio"
+                  name="import-mode"
+                  value="merge"
+                  checked={preview.mode === 'merge'}
+                  onChange={() => setPreview({ ...preview, mode: 'merge' })}
+                />
+                <span>
+                  <strong>Merge</strong>
+                  <span className="text-muted-foreground block">
+                    Keep existing sessions and add the imported sessions.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="radio"
+                  name="import-mode"
+                  value="replace"
+                  checked={preview.mode === 'replace'}
+                  onChange={() => setPreview({ ...preview, mode: 'replace' })}
+                />
+                <span>
+                  <strong>Replace</strong>
+                  <span className="text-muted-foreground block">
+                    Remove existing sessions after this file is validated.
+                  </span>
+                </span>
+              </label>
+            </fieldset>
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setPreview(null)}>
                 Cancel

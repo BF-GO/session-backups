@@ -46,14 +46,14 @@ export function sanitizeText(value: string, maxLength = 500): string {
     .slice(0, maxLength);
 }
 
-export const savedTabGroupSchema = z.object({
+export const savedTabGroupSchema = z.strictObject({
   id: z.string().min(1).max(100),
   title: z.string().max(500),
   color: z.enum(TAB_GROUP_COLORS),
   collapsed: z.boolean(),
 });
 
-export const savedTabSchema = z.object({
+export const savedTabSchema = z.strictObject({
   id: z.string().min(1).max(100),
   url: z.string().min(1).max(20_000),
   title: z.string().max(2_000),
@@ -64,7 +64,7 @@ export const savedTabSchema = z.object({
   groupId: z.string().min(1).max(100).nullable(),
 });
 
-export const savedWindowSchema = z.object({
+export const savedWindowSchema = z.strictObject({
   id: z.string().min(1).max(100),
   focused: z.boolean(),
   state: z.enum(WINDOW_STATES),
@@ -72,7 +72,7 @@ export const savedWindowSchema = z.object({
   groups: z.array(savedTabGroupSchema).max(500),
 });
 
-export const savedSessionSchema = z.object({
+export const savedSessionSchema = z.strictObject({
   id: z.string().min(1).max(100),
   name: z.string().max(500).nullable(),
   createdAt: z.number().int().nonnegative(),
@@ -83,29 +83,66 @@ export const savedSessionSchema = z.object({
   windows: z.array(savedWindowSchema).max(100),
 });
 
-export const settingsSchema = z.object({
+export const settingsSchema = z.strictObject({
   autoBackupIntervalMinutes: z.number().int().min(1).max(43_200),
   notificationsEnabled: z.boolean(),
   theme: z.enum(['light', 'dark', 'system']),
-  retention: z.object({
+  retention: z.strictObject({
     automatic: z.number().int().min(1).max(10_000),
     change: z.number().int().min(1).max(10_000),
   }),
 });
 
 export const sessionStorageStateSchema: z.ZodType<SessionStorageState> =
-  z.object({
+  z.strictObject({
     schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
     sessions: z.array(savedSessionSchema).max(MAX_SESSION_COUNT),
     settings: settingsSchema,
-    migration: z.object({
+    migration: z.strictObject({
       legacyV1Completed: z.boolean(),
       completedAt: z.number().int().nonnegative().nullable(),
     }),
   });
 
-const importedSessionSchema = savedSessionSchema.superRefine(
-  (session, context) => {
+const importedTabSchema = z.strictObject({
+  id: z.string().min(1).max(100),
+  url: z.string().min(1).max(20_000),
+  title: z.string().max(2_000).optional().default(''),
+  favIconUrl: z.string().max(20_000).nullable().optional().default(null),
+  pinned: z.boolean().optional().default(false),
+  active: z.boolean().optional().default(false),
+  index: z.number().int().nonnegative().optional(),
+  groupId: z.string().min(1).max(100).nullable().optional().default(null),
+});
+
+const importedWindowSchema = z
+  .strictObject({
+    id: z.string().min(1).max(100),
+    focused: z.boolean(),
+    state: z.enum(WINDOW_STATES),
+    tabs: z.array(importedTabSchema).max(2_000),
+    groups: z.array(savedTabGroupSchema).max(500),
+  })
+  .transform((window) => ({
+    ...window,
+    tabs: window.tabs.map((tab, index) => ({
+      ...tab,
+      index: tab.index ?? index,
+    })),
+  }));
+
+const importedSessionSchema = z
+  .strictObject({
+    id: z.string().min(1).max(100),
+    name: z.string().max(500).nullable(),
+    createdAt: z.number().int().nonnegative(),
+    updatedAt: z.number().int().nonnegative(),
+    source: z.enum(SESSION_SOURCES),
+    pinned: z.boolean(),
+    hash: z.string().min(1).max(200),
+    windows: z.array(importedWindowSchema).max(100),
+  })
+  .superRefine((session, context) => {
     session.windows.forEach((window, windowIndex) => {
       window.tabs.forEach((tab, tabIndex) => {
         if (!isSupportedUrl(tab.url)) {
@@ -117,15 +154,28 @@ const importedSessionSchema = savedSessionSchema.superRefine(
         }
       });
     });
-  },
-);
+  });
 
-export const sessionExportSchema = z.object({
-  format: z.literal('session-saver'),
-  version: z.literal(CURRENT_SCHEMA_VERSION),
-  exportedAt: z.number().int().nonnegative(),
-  sessions: z.array(importedSessionSchema).min(1).max(MAX_SESSION_COUNT),
-});
+export const sessionExportSchema = z
+  .strictObject({
+    format: z.literal('session-saver'),
+    version: z.literal(CURRENT_SCHEMA_VERSION),
+    exportedAt: z.number().int().nonnegative(),
+    sessions: z.array(importedSessionSchema).min(1).max(MAX_SESSION_COUNT),
+  })
+  .superRefine((payload, context) => {
+    const ids = new Set<string>();
+    payload.sessions.forEach((session, index) => {
+      if (ids.has(session.id)) {
+        context.addIssue({
+          code: 'custom',
+          message: `Duplicate session ID: ${session.id}`,
+          path: ['sessions', index, 'id'],
+        });
+      }
+      ids.add(session.id);
+    });
+  });
 
 export const defaultStorageState = (now = Date.now()): SessionStorageState => ({
   schemaVersion: CURRENT_SCHEMA_VERSION,

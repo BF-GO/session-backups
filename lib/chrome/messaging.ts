@@ -3,6 +3,7 @@ import { browser } from 'wxt/browser';
 import type { SessionRequest, SessionResponse } from '../../types/messages';
 import type {
   CreateSessionResult,
+  ImportMode,
   ImportResult,
   RestoreOptions,
   RestoreResult,
@@ -77,8 +78,11 @@ export async function exportSession(id: string): Promise<SessionExport> {
   return response.data;
 }
 
-export async function importSessions(payload: unknown): Promise<ImportResult> {
-  const response = await request({ type: 'sessions:import', payload });
+export async function importSessions(
+  payload: unknown,
+  mode: ImportMode = 'merge',
+): Promise<ImportResult> {
+  const response = await request({ type: 'sessions:import', payload, mode });
   if (response.type !== 'sessions:import')
     throw new Error('Unexpected response.');
   return response.data;

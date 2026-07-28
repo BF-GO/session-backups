@@ -3,6 +3,7 @@ import { restoreSavedSession } from '../chrome/restore-session';
 import type {
   CreateSessionInput,
   CreateSessionResult,
+  ImportMode,
   ImportResult,
   RestoreOptions,
   RestoreResult,
@@ -13,12 +14,13 @@ import type {
   SessionStorageState,
 } from '../../types/session';
 import {
+  MAX_SESSION_COUNT,
   STORAGE_KEY,
   sanitizeText,
   savedSessionSchema,
-  sessionExportSchema,
   sessionStorageStateSchema,
 } from '../validation/session-schema';
+import { inspectImportPayload } from '../sessions/import';
 import {
   convertLegacyCollection,
   loadOrMigrateStorage,
@@ -200,17 +202,20 @@ export class SessionRepository {
     return restoreSavedSession(session, options);
   }
 
-  importSessions(payload: unknown): Promise<ImportResult> {
+  importSessions(
+    payload: unknown,
+    mode: ImportMode = 'merge',
+  ): Promise<ImportResult> {
     return this.enqueue(async () => {
       const state = await this.readState();
-      const parsed = sessionExportSchema.safeParse(payload);
+      const preview = inspectImportPayload(payload);
       let incoming: SavedSession[];
       let skipped = 0;
 
-      if (parsed.success) {
-        incoming = parsed.data.sessions;
-      } else if (payload && typeof payload === 'object') {
-        const legacy = payload as Record<string, unknown>;
+      if (preview.kind === 'v2') {
+        incoming = preview.sessions;
+      } else {
+        const legacy = preview.payload;
         const auto = convertLegacyCollection(
           legacy.autoSessions,
           'automatic',
@@ -225,8 +230,6 @@ export class SessionRepository {
         skipped = auto.skipped + change.skipped;
         if (incoming.length === 0)
           throw new Error('The import file is not a supported session format.');
-      } else {
-        throw new Error('The import file is not a supported session format.');
       }
 
       const imported = incoming.map((session) => {
@@ -243,10 +246,16 @@ export class SessionRepository {
         });
       });
 
-      state.sessions = applyRetentionToSessions(
-        [...imported, ...state.sessions],
+      const retained = applyRetentionToSessions(
+        [...imported, ...(mode === 'merge' ? state.sessions : [])],
         state.settings,
       );
+      if (retained.length > MAX_SESSION_COUNT) {
+        throw new Error(
+          `Import would exceed the ${MAX_SESSION_COUNT}-session storage limit.`,
+        );
+      }
+      state.sessions = retained;
       await this.persist(state);
       return { imported: imported.length, skipped, sessions: imported };
     });

@@ -101,6 +101,7 @@ jobs:
             ${{ steps.artifact.outputs.zip_path }}
             ${{ steps.artifact.outputs.checksum_path }}
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Publish GitHub Release
         env:

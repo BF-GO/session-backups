@@ -81,4 +81,5 @@ jobs:
           name: session-saver-${{ steps.version.outputs.package_version }}-chrome
           path: .output/*-chrome.zip
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 14
